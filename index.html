@@ -96,6 +96,9 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
 .slot-head h2 { font-size: 15px; margin: 0; }
 .slot-head .sub { color: var(--muted); font-size: 12px; }
 .tabs { display: flex; gap: 4px; margin-left: auto; }
+.focus { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.focus select { font: inherit; font-size: 12px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 6px; padding: 3px 6px; }
 .tabs button { border: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit;
   font-size: 12px; padding: 3px 9px; border-radius: 6px; cursor: pointer; }
 .tabs button[aria-pressed="true"] { color: var(--text); background: var(--panel-2); border-color: var(--muted); }
@@ -208,7 +211,8 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
     <p><b>How it works.</b> Weapons are ranked by single-target DPS:
       <code>shots × max(dmg × (0.5 + ATT/50) − DEF, 10%) × (1.5 + 6.5 × DEX/75) × rate of fire</code>,
       summed over each projectile type; armor-piercing shots ignore DEF. Armor and rings are ranked by stat points
-      (HP ×0.2, MP ×0.1, other stats ×1). Damage abilities (spells, quivers, skulls, scepters…) are ranked by
+      (HP ×0.2, MP ×0.1, other stats ×1). Use the <b>Focus</b> menu on those sections to make one stat (or ATT + DEX
+      together) count ×5. Damage abilities (spells, quivers, skulls, scepters…) are ranked by
       damage per cast; buff/utility abilities (helms, tomes, cloaks…) by stat points, so treat those as a rough guide.
       ⚠ marks weapons whose spread or alternating pattern makes the all-shots-hit DPS figure unrealistic. They're
       left out of the suggestions but still listed under "All items". Difficulty uses RealmEye's 0–10 dungeon rating for the easiest
@@ -240,7 +244,7 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 
 let progress = load(STORE_KEY, {});
 const shown = {};  // per-slot "show more" counts (this session only)
-let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, biomeFactor: 5, eventFactor: 5, tabs: {} },
+let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, biomeFactor: 5, eventFactor: 5, tabs: {}, focus: {} },
   load(PREF_KEY, {}));
 
 const STAT_WEIGHT = { HP: 0.2, MP: 0.1, ATT: 1, DEF: 1, SPD: 1, DEX: 1, VIT: 1, WIS: 1 };
@@ -289,17 +293,32 @@ function weaponDps(it, cls) {
   return dps;
 }
 
-function statScore(it) {
-  return Object.entries(it.onEquip).reduce((s, [k, v]) => s + v * (STAT_WEIGHT[k] || 0), 0);
+// Armor/ring "Focus": the chosen stat(s) count FOCUS_MULT times as much.
+// ATT and DEX are grouped because both raise damage output together.
+const FOCUS_MULT = 5;
+const FOCUS_OPTIONS = {
+  "": { label: "Any (total stats)", stats: [] },
+  off: { label: "ATT + DEX", stats: ["ATT", "DEX"] },
+  DEF: { label: "DEF", stats: ["DEF"] },
+  SPD: { label: "SPD", stats: ["SPD"] },
+  VIT: { label: "VIT", stats: ["VIT"] },
+  WIS: { label: "WIS", stats: ["WIS"] },
+  HP: { label: "HP", stats: ["HP"] },
+  MP: { label: "MP", stats: ["MP"] },
+};
+function statScore(it, focus) {
+  const boost = (FOCUS_OPTIONS[focus] || FOCUS_OPTIONS[""]).stats;
+  return Object.entries(it.onEquip).reduce((s, [k, v]) =>
+    s + v * (STAT_WEIGHT[k] || 0) * (boost.includes(k) ? FOCUS_MULT : 1), 0);
 }
 // Ability categories where most items deal damage are ranked by damage per cast;
 // buff/utility abilities, armor and rings are ranked by their stat bonuses.
 const DAMAGE_CATS = new Set(Object.values(D.categories).filter(c => c.slot === "ability" &&
   c.items.filter(s => D.items[s]?.projectiles.some(p => !p.fromEffect)).length >= 0.7 * c.items.length).map(c => c.slug));
 function isDamageAbility(it) { return it.slot === "ability" && DAMAGE_CATS.has(it.category); }
-function statPower(it) {
+function statPower(it, focus) {
   if (isDamageAbility(it)) return it.projectiles.reduce((s, p) => s + p.shots * p.avg, 0);
-  return statScore(it);
+  return statScore(it, it.slot === "armor" || it.slot === "ring" ? focus : "");
 }
 
 function itemsFor(cats) {
@@ -317,9 +336,9 @@ function itemsFor(cats) {
   return out;
 }
 
-function analyse(items, cls, owned) {
+function analyse(items, cls, owned, focus) {
   let rows = items.map(it => ({
-    it, power: it.slot === "weapon" ? weaponDps(it, cls) : statPower(it),
+    it, power: it.slot === "weapon" ? weaponDps(it, cls) : statPower(it, focus),
     diff: effDifficulty(it) ?? 10,
   }));
   if (!prefs.early) {
@@ -402,8 +421,14 @@ function renderSlot(cls, slot, cats) {
     tabs = `<div class="tabs">` + ["all", ...cats].map(c =>
       `<button data-tab="${key}" data-val="${c}" aria-pressed="${c === sel}">${c === "all" ? "All" : esc(D.categories[c].name)}</button>`).join("") + `</div>`;
   }
+  const focus = (slot === "armor" || slot === "ring") ? (prefs.focus[key] || "") : "";
+  if (slot === "armor" || slot === "ring") {
+    tabs = `<label class="focus">Focus <select data-focus="${key}" aria-label="${SLOT_LABEL[slot]} stat focus">` +
+      Object.entries(FOCUS_OPTIONS).map(([v, o]) => `<option value="${v}"${v === focus ? " selected" : ""}>${esc(o.label)}</option>`).join("") +
+      `</select></label>`;
+  }
   const items = itemsFor(active);
-  const a = analyse(items, cls, owned);
+  const a = analyse(items, cls, owned, focus);
   const ownedCount = a.rows.filter(r => owned[r.it.slug]).length;
   const limit = shown[key] || 5;
   const visible = a.ladder.slice(0, limit);
@@ -416,7 +441,7 @@ function renderSlot(cls, slot, cats) {
     ? `<button class="btn more" data-more="${key}">Show ${Math.min(5, a.ladder.length - limit)} more</button>` : "";
   return `<section class="slot">
     <div class="slot-head"><h2>${SLOT_LABEL[slot]}</h2>
-      <span class="sub">${esc(active.map(c => D.categories[c].name).join(" + "))} · ${ownedCount}/${a.rows.length} obtained</span>${tabs}</div>
+      <span class="sub">${esc(active.map(c => D.categories[c].name).join(" + "))} · ${ownedCount}/${a.rows.length} obtained${focus ? ` · ${esc(FOCUS_OPTIONS[focus].label)} ×${FOCUS_MULT}` : ""}</span>${tabs}</div>
     ${nextHtml}
     ${visible.length ? `<ol class="path">${visible.map(r => itemRow(r, slot, owned, r === next)).join("")}</ol>${more}` : ""}
     ${!items.length ? `<div class="empty">No items match the current filters.</div>` : ""}
@@ -464,6 +489,8 @@ $("#slots").addEventListener("click", e => {
   if (m) { shown[m.dataset.more] = (shown[m.dataset.more] || 5) + 5; render(); }
 });
 $("#slots").addEventListener("change", e => {
+  const f = e.target.closest("select[data-focus]");
+  if (f) { prefs.focus[f.dataset.focus] = f.value; render(); return; }
   const cb = e.target.closest("input[data-slug]");
   if (!cb) return;
   const p = progress[prefs.cls] ||= {};
