@@ -125,6 +125,7 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
       <label class="chk"><input type="checkbox" id="buff"> Damaging + Berserk</label>
       <label class="chk"><input type="checkbox" id="limited"> Include limited / event items</label>
       <label class="chk"><input type="checkbox" id="undrop"> Include non-drop items (shop, forge-only)</label>
+      <label class="chk">Biome whites are <input type="number" id="biome" min="1" max="50" step="1" style="width:56px"> × rarer</label>
       <label class="chk"><input type="checkbox" id="early"> Show early items (below T11 / T5 for abilities &amp; rings, and untiered items weaker than that)</label>
     </div>
     <div class="btns">
@@ -145,6 +146,8 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
       ⚠ marks weapons whose spread or alternating pattern makes the all-shots-hit DPS figure unrealistic. They're
       left out of the suggestions but still listed under "All items". Difficulty uses RealmEye's 0–10 dungeon rating for the easiest
       non-event dungeon that drops the item. Tiered gear drops everywhere, so it's rated by tier instead.
+      <b>Biome whites</b> drop from ordinary realm enemies but are much rarer than a normal drop. Their difficulty is
+      raised by 2 × log₂(rarity), so ×5 rarer adds about 4.6. Change the rarity estimate in the settings.
       <b>Score</b> = strength on a 0–100 scale, discounted for difficulty (the Prioritize slider sets how much).
       Checking an item hides everything that scores lower than it. The list then shows the next few items that score
       higher, easiest first, skipping any that are harder <i>and</i> lower-scoring than another option.</p>
@@ -163,13 +166,25 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 
 let progress = load(STORE_KEY, {});
 const shown = {};  // per-slot "show more" counts (this session only)
-let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, tabs: {} },
+let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, biomeFactor: 5, tabs: {} },
   load(PREF_KEY, {}));
 
 const STAT_WEIGHT = { HP: 0.2, MP: 0.1, ATT: 1, DEF: 1, SPD: 1, DEX: 1, VIT: 1, WIS: 1 };
 // Lowest tier shown unless "Show early tiers" is on. Abilities and rings top out at T7,
 // so T5 is their rough equivalent of a T11 weapon or armor.
 const MIN_TIER = { weapon: 11, armor: 11, ability: 5, ring: 5 };
+// Rarity classes: how many times rarer than a regular drop from the same source.
+// There are no published drop rates, so the factor is an adjustable estimate. It adds
+// 2 x log2(factor) to the item's difficulty (x5 adds about 4.6), capped at 10.
+// The factor is also what a future dungeon/kill counter can use to estimate expected runs.
+const RARITY = {
+  biome: { label: "Biome white", factor: () => prefs.biomeFactor },
+};
+function rarityFactor(it) { return it.rarity && RARITY[it.rarity] ? Math.max(1, RARITY[it.rarity].factor()) : 1; }
+function effDifficulty(it) {
+  if (it.difficulty == null) return null;
+  return Math.min(10, Math.round((it.difficulty + 2 * Math.log2(rarityFactor(it))) * 10) / 10);
+}
 const SLOT_LABEL = { weapon: "Weapon", ability: "Ability", armor: "Armor", ring: "Ring" };
 
 function diffColor(d) {
@@ -231,7 +246,7 @@ function itemsFor(cats) {
 function analyse(items, cls, owned) {
   let rows = items.map(it => ({
     it, power: it.slot === "weapon" ? weaponDps(it, cls) : statPower(it),
-    diff: it.difficulty ?? 10,
+    diff: effDifficulty(it) ?? 10,
   }));
   if (!prefs.early) {
     // Hide untiered/set items weaker than the lowest tier shown (T11, or T5 for
@@ -294,9 +309,9 @@ function itemRow(r, slot, owned, isNext) {
     <div><span class="name"><a href="https://www.realmeye.com/wiki/${esc(it.slug)}" target="_blank" rel="noopener">${esc(it.name)}</a></span><span class="tier">${esc(it.tier)}</span></div>
     <div class="nums"><span class="pow"${r.suspect ? ' title="Complex firing pattern: not every shot will hit one target, so real DPS is likely much lower"' : ""}>${r.suspect ? "⚠ " : ""}${Math.round(r.power)} <small>${unit}</small></span>
       <span class="score" title="Score (strength discounted by difficulty)">${Math.round(r.score)}</span>
-      <span class="diff" style="background:${diffColor(it.difficulty)}" title="Difficulty (0–10)">${it.difficulty ?? "–"}</span>
+      <span class="diff" style="background:${diffColor(effDifficulty(it))}" title="${it.rarity ? `Difficulty ${it.difficulty} + rarity (×${rarityFactor(it)} rarer) = ${effDifficulty(it)}` : "Difficulty (0–10)"}">${effDifficulty(it) ?? "–"}</span>
       <div class="bar"><i style="width:${Math.round(r.norm * 100)}%"></i></div></div>
-    <div class="desc">${esc(src)}${bits.length ? " · " + esc(bits.join(" · ")) : ""}${it.event ? " · event" : ""}</div>
+    <div class="desc">${esc(src)}${bits.length ? " · " + esc(bits.join(" · ")) : ""}${it.event ? " · event" : ""}${it.rarity ? ` · <b>${esc(RARITY[it.rarity].label)}</b> (${esc(it.biome || "")}, ~×${rarityFactor(it)} rarer)` : ""}</div>
   </li>`;
 }
 
@@ -319,7 +334,7 @@ function renderSlot(cls, slot, cats) {
   const next = visible[0];
   const cur = a.current ? `Current best: <b>${esc(a.current.it.name)}</b> (score ${Math.round(a.current.score)}). ` : "";
   const nextHtml = next
-    ? `<div class="next">${cur}Next goal: <b>${esc(next.it.name)}</b> (score ${Math.round(next.score)}, difficulty ${next.it.difficulty ?? "–"})</div>`
+    ? `<div class="next">${cur}Next goal: <b>${esc(next.it.name)}</b> (score ${Math.round(next.score)}, difficulty ${effDifficulty(next.it) ?? "–"})</div>`
     : items.length ? `<div class="next done">${cur}Nothing scores higher than what you've already got.</div>` : "";
   const more = a.ladder.length > limit
     ? `<button class="btn more" data-more="${key}">Show ${Math.min(5, a.ladder.length - limit)} more</button>` : "";
@@ -355,7 +370,8 @@ function render() {
 // ---- wiring
 $("#meta").innerHTML = `${Object.keys(D.items).length} items · scraped ${new Date(D.generated).toLocaleDateString()} from <a href="${D.source}" target="_blank" rel="noopener">RealmEye</a>`;
 $("#w").value = prefs.w; $("#def").value = prefs.def; $("#defv").textContent = prefs.def;
-$("#buff").checked = prefs.buff; $("#limited").checked = prefs.limited; $("#undrop").checked = prefs.undrop; $("#early").checked = prefs.early;
+$("#buff").checked = prefs.buff; $("#limited").checked = prefs.limited; $("#undrop").checked = prefs.undrop; $("#early").checked = prefs.early; $("#biome").value = prefs.biomeFactor;
+$("#biome").addEventListener("input", e => { const v = +e.target.value; if (v >= 1) { prefs.biomeFactor = v; render(); } });
 
 $("#classes").addEventListener("click", e => { const b = e.target.closest("[data-cls]"); if (b) { prefs.cls = b.dataset.cls; render(); } });
 $("#w").addEventListener("input", e => { prefs.w = +e.target.value; render(); });

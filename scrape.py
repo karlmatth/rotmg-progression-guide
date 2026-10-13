@@ -419,6 +419,25 @@ def tier_difficulty(tier, max_tier):
 
 
 REALM_EVENT_DIFFICULTY = 3.0
+
+
+def scrape_biome_whites():
+    """Biome whites drop from ordinary realm enemies but are many times rarer
+    than a normal drop. Returns {item slug: biome name(s)}."""
+    soup = fetch("biome-whites")
+    out = {}
+    if soup is None:
+        return out
+    for tr in wiki(soup).find_all("tr"):
+        tds = tr.find_all("td", recursive=False)
+        if len(tds) < 3:
+            continue
+        a = tds[1].find("a", href=True) or tds[0].find("a", href=True)
+        s = slug_of(a["href"]) if a else None
+        if s:
+            out[s] = ", ".join(text(x) for x in tds[2].find_all("a")) or text(tds[2])
+    log(f"{len(out)} biome whites")
+    return out
 SEASONAL_RE = re.compile(r"event|halloween|oryxmas|christmas|valentine|easter|candy|blooming|"
                          r"totem|pumpkin|egg hunt|beach|summer|winter|st\. patrick|mayhem|anniversary", re.I)
 
@@ -514,6 +533,11 @@ def main():
                   "_maxTier": max_tier}
             items[r["slug"]] = it
             categories[cat]["items"].append(r["slug"])
+
+    for slug, biome in scrape_biome_whites().items():
+        if slug in items:
+            items[slug]["rarity"] = "biome"
+            items[slug]["biome"] = biome
 
     dungeons = scrape_dungeons()
     enemy_to, loot_to = {}, {}
