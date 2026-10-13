@@ -421,10 +421,16 @@ def tier_difficulty(tier, max_tier):
 REALM_EVENT_DIFFICULTY = 3.0
 
 
-def scrape_biome_whites():
-    """Biome whites drop from ordinary realm enemies but are many times rarer
-    than a normal drop. Returns {item slug: biome name(s)}."""
-    soup = fetch("biome-whites")
+# RealmEye pages listing very rare realm drops: page slug -> rarity class.
+# Biome whites drop from ordinary enemies in a biome; event (realm/encounter)
+# whites from specific realm encounters and minibosses. Both are many times
+# rarer than a normal drop from the same source.
+RARITY_PAGES = {"biome-whites": "biome", "event-whites": "event"}
+
+
+def scrape_rarity_list(page):
+    """Returns {item slug: area/biome name(s)} from a RealmEye whites list."""
+    soup = fetch(page)
     out = {}
     if soup is None:
         return out
@@ -436,7 +442,7 @@ def scrape_biome_whites():
         s = slug_of(a["href"]) if a else None
         if s:
             out[s] = ", ".join(text(x) for x in tds[2].find_all("a")) or text(tds[2])
-    log(f"{len(out)} biome whites")
+    log(f"{len(out)} items on {page}")
     return out
 SEASONAL_RE = re.compile(r"event|halloween|oryxmas|christmas|valentine|easter|candy|blooming|"
                          r"totem|pumpkin|egg hunt|beach|summer|winter|st\. patrick|mayhem|anniversary", re.I)
@@ -534,10 +540,11 @@ def main():
             items[r["slug"]] = it
             categories[cat]["items"].append(r["slug"])
 
-    for slug, biome in scrape_biome_whites().items():
-        if slug in items:
-            items[slug]["rarity"] = "biome"
-            items[slug]["biome"] = biome
+    for page, rarity in RARITY_PAGES.items():
+        for slug, area in scrape_rarity_list(page).items():
+            if slug in items and "rarity" not in items[slug]:
+                items[slug]["rarity"] = rarity
+                items[slug]["biome"] = area
 
     dungeons = scrape_dungeons()
     enemy_to, loot_to = {}, {}

@@ -126,6 +126,7 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
       <label class="chk"><input type="checkbox" id="limited"> Include limited / event items</label>
       <label class="chk"><input type="checkbox" id="undrop"> Include non-drop items (shop, forge-only)</label>
       <label class="chk">Biome whites are <input type="number" id="biome" min="1" max="50" step="1" style="width:56px"> × rarer</label>
+      <label class="chk">Event whites are <input type="number" id="event" min="1" max="50" step="1" style="width:56px"> × rarer</label>
       <label class="chk"><input type="checkbox" id="early"> Show early items (below T11 / T5 for abilities &amp; rings, and untiered items weaker than that)</label>
     </div>
     <div class="btns">
@@ -146,8 +147,9 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
       ⚠ marks weapons whose spread or alternating pattern makes the all-shots-hit DPS figure unrealistic. They're
       left out of the suggestions but still listed under "All items". Difficulty uses RealmEye's 0–10 dungeon rating for the easiest
       non-event dungeon that drops the item. Tiered gear drops everywhere, so it's rated by tier instead.
-      <b>Biome whites</b> drop from ordinary realm enemies but are much rarer than a normal drop. Their difficulty is
-      raised by 2 × log₂(rarity), so ×5 rarer adds about 4.6. Change the rarity estimate in the settings.
+      <b>Biome whites</b> (from ordinary enemies in a realm biome) and <b>event whites</b> (from specific realm
+      encounters and minibosses) are much rarer than a normal drop. Their difficulty is raised by 2 × log₂(rarity),
+      so ×5 rarer adds about 4.6. Change the rarity estimates in the settings.
       <b>Score</b> = strength on a 0–100 scale, discounted for difficulty (the Prioritize slider sets how much).
       Checking an item hides everything that scores lower than it. The list then shows the next few items that score
       higher, easiest first, skipping any that are harder <i>and</i> lower-scoring than another option.</p>
@@ -166,7 +168,7 @@ function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); 
 
 let progress = load(STORE_KEY, {});
 const shown = {};  // per-slot "show more" counts (this session only)
-let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, biomeFactor: 5, tabs: {} },
+let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, biomeFactor: 5, eventFactor: 5, tabs: {} },
   load(PREF_KEY, {}));
 
 const STAT_WEIGHT = { HP: 0.2, MP: 0.1, ATT: 1, DEF: 1, SPD: 1, DEX: 1, VIT: 1, WIS: 1 };
@@ -179,6 +181,7 @@ const MIN_TIER = { weapon: 11, armor: 11, ability: 5, ring: 5 };
 // The factor is also what a future dungeon/kill counter can use to estimate expected runs.
 const RARITY = {
   biome: { label: "Biome white", factor: () => prefs.biomeFactor },
+  event: { label: "Event white", factor: () => prefs.eventFactor },
 };
 function rarityFactor(it) { return it.rarity && RARITY[it.rarity] ? Math.max(1, RARITY[it.rarity].factor()) : 1; }
 function effDifficulty(it) {
@@ -371,7 +374,9 @@ function render() {
 $("#meta").innerHTML = `${Object.keys(D.items).length} items · scraped ${new Date(D.generated).toLocaleDateString()} from <a href="${D.source}" target="_blank" rel="noopener">RealmEye</a>`;
 $("#w").value = prefs.w; $("#def").value = prefs.def; $("#defv").textContent = prefs.def;
 $("#buff").checked = prefs.buff; $("#limited").checked = prefs.limited; $("#undrop").checked = prefs.undrop; $("#early").checked = prefs.early; $("#biome").value = prefs.biomeFactor;
+$("#event").value = prefs.eventFactor;
 $("#biome").addEventListener("input", e => { const v = +e.target.value; if (v >= 1) { prefs.biomeFactor = v; render(); } });
+$("#event").addEventListener("input", e => { const v = +e.target.value; if (v >= 1) { prefs.eventFactor = v; render(); } });
 
 $("#classes").addEventListener("click", e => { const b = e.target.closest("[data-cls]"); if (b) { prefs.cls = b.dataset.cls; render(); } });
 $("#w").addEventListener("input", e => { prefs.w = +e.target.value; render(); });
