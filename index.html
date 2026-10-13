@@ -136,6 +136,8 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
 .empty { padding: 14px; color: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin: 18px 0 0; }
 .legend p { margin: 0; max-width: 820px; }
+.site-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.site-footer a { color: inherit; }
 @media (max-width: 560px) {
   .it { grid-template-columns: 20px 30px 1fr; }
   .it .nums { grid-column: 3; text-align: left; display: flex; gap: 8px; align-items: center; }
@@ -218,6 +220,12 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
       Checking an item hides everything that scores lower than it. The list then shows the next few items that score
       higher, easiest first, skipping any that are harder <i>and</i> lower-scoring than another option.</p>
   </div>
+
+  <footer class="site-footer">
+    © 2026 karlmatth. All rights reserved. Item data and images from the
+    <a href="https://www.realmeye.com/wiki/realm-of-the-mad-god" target="_blank" rel="noopener">RealmEye wiki</a>.
+    Not affiliated with RealmEye or the developers of Realm of the Mad God.
+  </footer>
 </div>
 
 <script src="data.js"></script>

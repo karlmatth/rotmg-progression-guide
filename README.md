@@ -33,3 +33,9 @@ just the scraper's download cache and is git-ignored.
 - **Google AdSense:** the AdSense tag in `index.html` runs Auto ads. Ad formats
   and placement are managed in the AdSense dashboard. `ads.txt` lives in the
   `karlmatth.github.io` repository, at the domain root.
+
+## Copyright
+
+Copyright (c) 2026 karlmatth. All rights reserved. No license is granted to copy,
+modify, redistribute or host this work; see [LICENSE](LICENSE). Item data and
+images are from the RealmEye wiki and belong to their respective owners.
