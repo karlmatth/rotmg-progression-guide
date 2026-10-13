@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RotMG Progression Guide</title>
+<style>
+:root {
+  --bg: #f4f2ee; --panel: #ffffff; --panel-2: #f8f6f2; --text: #1d1b19; --muted: #6b655d;
+  --line: #e2ddd5; --accent: #b4441b; --accent-soft: #fbe9e1; --good: #2f7d4f; --good-soft: #e3f3e8;
+  --d0: #3b8f5a; --d1: #8a9a2e; --d2: #c08a1c; --d3: #c9571f; --d4: #a3233a;
+  --shadow: 0 1px 2px rgb(0 0 0 / .06), 0 2px 8px rgb(0 0 0 / .04);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15130f; --panel: #1f1c18; --panel-2: #26231e; --text: #ece7df; --muted: #a39b8f;
+  --line: #36312a; --accent: #ef7a45; --accent-soft: #3a2418; --good: #5fc68a; --good-soft: #1b3326;
+  --d0: #5fc68a; --d1: #b7c64e; --d2: #e2b04a; --d3: #ef7a45; --d4: #e8566e;
+  --shadow: none;
+}}
+:root[data-theme="dark"] {
+  --bg: #15130f; --panel: #1f1c18; --panel-2: #26231e; --text: #ece7df; --muted: #a39b8f;
+  --line: #36312a; --accent: #ef7a45; --accent-soft: #3a2418; --good: #5fc68a; --good-soft: #1b3326;
+  --d0: #5fc68a; --d1: #b7c64e; --d2: #e2b04a; --d3: #ef7a45; --d4: #e8566e;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 16px; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+.meta { color: var(--muted); font-size: 12px; }
+.meta a { color: inherit; }
+.classes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.classes button { border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  padding: 6px 12px; border-radius: 999px; cursor: pointer; font: inherit; }
+.classes button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.classes button .cnt { font-size: 11px; opacity: .75; margin-left: 4px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  margin-bottom: 18px; box-shadow: var(--shadow); }
+.controls label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.controls label.chk { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 13px; }
+.controls .row { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 13px; }
+.controls input[type=range] { flex: 1; accent-color: var(--accent); }
+.controls input[type=number] { width: 70px; padding: 4px 6px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--text); border-radius: 6px; font: inherit; }
+.controls .btns { display: flex; gap: 6px; align-items: end; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 5px 10px;
+  border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; }
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr)); gap: 16px; }
+.slot { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; min-width: 0; }
+.slot-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; flex-wrap: wrap; }
+.slot-head h2 { font-size: 15px; margin: 0; }
+.slot-head .sub { color: var(--muted); font-size: 12px; }
+.tabs { display: flex; gap: 4px; margin-left: auto; }
+.tabs button { border: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit;
+  font-size: 12px; padding: 3px 9px; border-radius: 6px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { color: var(--text); background: var(--panel-2); border-color: var(--muted); }
+.next { margin: 0 14px 8px; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft);
+  font-size: 13px; }
+.next b { color: var(--accent); }
+.next.done { background: var(--good-soft); }
+.next.done b { color: var(--good); }
+ol.path { list-style: none; margin: 0; padding: 0 8px 8px; }
+.it { display: grid; grid-template-columns: 22px 36px 1fr auto; gap: 4px 10px; align-items: center;
+  padding: 7px 6px; border-radius: 8px; }
+.it + .it { border-top: 1px solid var(--line); }
+.it.owned .name { text-decoration: line-through; text-decoration-color: var(--muted); color: var(--muted); }
+.it.isnext { background: var(--accent-soft); }
+.it input { width: 17px; height: 17px; accent-color: var(--good); margin: 0; cursor: pointer; }
+.it img { width: 34px; height: 34px; image-rendering: pixelated; }
+.it .ph { width: 34px; height: 34px; border-radius: 6px; background: var(--panel-2); }
+.name { font-weight: 600; }
+.name a { color: inherit; text-decoration: none; }
+.name a:hover { text-decoration: underline; }
+.tier { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 4px;
+  padding: 0 4px; margin-left: 6px; vertical-align: 1px; }
+.desc { font-size: 12px; color: var(--muted); grid-column: 3 / 5; margin-top: -2px; }
+.desc .eff { display: inline-block; }
+.nums { text-align: right; white-space: nowrap; }
+.pow { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
+.pow small { font-weight: 400; color: var(--muted); font-size: 11px; }
+.diff { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 4px; padding: 1px 6px;
+  font-variant-numeric: tabular-nums; }
+.score { display: inline-block; font-size: 11px; font-weight: 700; border: 1px solid var(--line); border-radius: 4px;
+  padding: 0 5px; margin-right: 4px; font-variant-numeric: tabular-nums; }
+.btn.more { margin: 0 14px 10px; }
+.bar { height: 4px; background: var(--panel-2); border-radius: 2px; margin-top: 4px; width: 90px; margin-left: auto; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+details.all { border-top: 1px solid var(--line); margin-top: auto; }
+details.all summary { padding: 10px 14px; cursor: pointer; color: var(--muted); font-size: 13px; }
+details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
+.empty { padding: 14px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin: 18px 0 0; }
+.legend p { margin: 0; max-width: 820px; }
+@media (max-width: 560px) {
+  .it { grid-template-columns: 20px 30px 1fr; }
+  .it .nums { grid-column: 3; text-align: left; display: flex; gap: 8px; align-items: center; }
+  .bar { display: none; }
+  .desc { grid-column: 2 / 4; }
+  .tabs { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>RotMG Progression Guide</h1>
+    <span class="meta" id="meta"></span>
+  </header>
+
+  <div class="classes" id="classes" role="group" aria-label="Class"></div>
+
+  <div class="controls">
+    <label>Prioritize
+      <span class="row">Power <input type="range" id="w" min="0" max="1" step="0.05" value="0.45"> Easy to get</span>
+    </label>
+    <label>Target DEF <span class="row"><input type="range" id="def" min="0" max="100" step="1" value="20"><output id="defv">20</output></span></label>
+    <label>Your ATT / DEX (blank = class max)
+      <span class="row"><input type="number" id="att" placeholder="ATT"> <input type="number" id="dex" placeholder="DEX"></span>
+    </label>
+    <div>
+      <label class="chk"><input type="checkbox" id="buff"> Damaging + Berserk</label>
+      <label class="chk"><input type="checkbox" id="limited"> Include limited / event items</label>
+      <label class="chk"><input type="checkbox" id="undrop"> Include non-drop items (shop, forge-only)</label>
+      <label class="chk"><input type="checkbox" id="early"> Show early items (below T11 / T5 for abilities &amp; rings, and untiered items weaker than that)</label>
+    </div>
+    <div class="btns">
+      <button class="btn" id="export">Export progress</button>
+      <button class="btn" id="import">Import</button>
+      <button class="btn" id="reset">Clear this class</button>
+    </div>
+  </div>
+
+  <div class="slots" id="slots"></div>
+
+  <div class="legend">
+    <p><b>How it works.</b> Weapons are ranked by single-target DPS:
+      <code>shots × max(dmg × (0.5 + ATT/50) − DEF, 10%) × (1.5 + 6.5 × DEX/75) × rate of fire</code>,
+      summed over each projectile type; armor-piercing shots ignore DEF. Armor and rings are ranked by stat points
+      (HP ×0.2, MP ×0.1, other stats ×1). Damage abilities (spells, quivers, skulls, scepters…) are ranked by
+      damage per cast; buff/utility abilities (helms, tomes, cloaks…) by stat points, so treat those as a rough guide.
+      ⚠ marks weapons whose spread or alternating pattern makes the all-shots-hit DPS figure unrealistic. They're
+      left out of the suggestions but still listed under "All items". Difficulty uses RealmEye's 0–10 dungeon rating for the easiest
+      non-event dungeon that drops the item. Tiered gear drops everywhere, so it's rated by tier instead.
+      <b>Score</b> = strength on a 0–100 scale, discounted for difficulty (the Prioritize slider sets how much).
+      Checking an item hides everything that scores lower than it. The list then shows the next few items that score
+      higher, easiest first, skipping any that are harder <i>and</i> lower-scoring than another option.</p>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.ROTMG_DATA;
+const $ = s => document.querySelector(s);
+const STORE_KEY = "rotmg-progress:v1";
+const PREF_KEY = "rotmg-prefs:v1";
+
+function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+let progress = load(STORE_KEY, {});
+const shown = {};  // per-slot "show more" counts (this session only)
+let prefs = Object.assign({ cls: D.classes[0].slug, w: 0.45, def: 20, buff: false, limited: false, undrop: false, early: false, tabs: {} },
+  load(PREF_KEY, {}));
+
+const STAT_WEIGHT = { HP: 0.2, MP: 0.1, ATT: 1, DEF: 1, SPD: 1, DEX: 1, VIT: 1, WIS: 1 };
+// Lowest tier shown unless "Show early tiers" is on. Abilities and rings top out at T7,
+// so T5 is their rough equivalent of a T11 weapon or armor.
+const MIN_TIER = { weapon: 11, armor: 11, ability: 5, ring: 5 };
+const SLOT_LABEL = { weapon: "Weapon", ability: "Ability", armor: "Armor", ring: "Ring" };
+
+function diffColor(d) {
+  if (d == null) return "var(--muted)";
+  return d < 2 ? "var(--d0)" : d < 4 ? "var(--d1)" : d < 6 ? "var(--d2)" : d < 8 ? "var(--d3)" : "var(--d4)";
+}
+
+function weaponDps(it, cls) {
+  const att = (+$("#att").value || cls.caps.ATT) + (it.onEquip.ATT || 0);
+  const dex = (+$("#dex").value || cls.caps.DEX) + (it.onEquip.DEX || 0);
+  const def = prefs.def;
+  let mult = 0.5 + att / 50, aps = 1.5 + 6.5 * dex / 75;
+  if (prefs.buff) { mult *= 1.25; aps *= 1.25; }
+  let dps = 0;
+  for (const p of it.projectiles) {
+    const raw = p.avg * mult;
+    const hit = p.ap ? raw : Math.max(raw - def, raw * 0.1);
+    let rate = aps * p.rof;
+    if (it.burst) {
+      // N volleys, then a cooldown that shrinks from maxDelay (0 DEX) to minDelay (75 DEX).
+      const b = it.burst, n = b.count;
+      const delay = b.maxDelay - (b.maxDelay - b.minDelay) * Math.min(dex, 75) / 75;
+      rate = n / ((n - 1) / rate + Math.max(1 / rate, delay));
+    }
+    dps += p.shots * hit * rate;
+  }
+  return dps;
+}
+
+function statScore(it) {
+  return Object.entries(it.onEquip).reduce((s, [k, v]) => s + v * (STAT_WEIGHT[k] || 0), 0);
+}
+// Ability categories where most items deal damage are ranked by damage per cast;
+// buff/utility abilities, armor and rings are ranked by their stat bonuses.
+const DAMAGE_CATS = new Set(Object.values(D.categories).filter(c => c.slot === "ability" &&
+  c.items.filter(s => D.items[s]?.projectiles.length).length >= 0.7 * c.items.length).map(c => c.slug));
+function isDamageAbility(it) { return it.slot === "ability" && DAMAGE_CATS.has(it.category); }
+function statPower(it) {
+  if (isDamageAbility(it)) return it.projectiles.reduce((s, p) => s + p.shots * p.avg, 0);
+  return statScore(it);
+}
+
+function itemsFor(cats) {
+  const seen = new Set(), out = [];
+  for (const c of cats) for (const s of D.categories[c]?.items || []) {
+    if (seen.has(s)) continue; seen.add(s);
+    const it = D.items[s];
+    if (!it) continue;
+    if (it.slot === "weapon" && !it.projectiles.length) continue;
+    if (!prefs.limited && (it.event || it.section === "limited")) continue;
+    if (!prefs.undrop && it.difficulty == null) continue;
+    if (!prefs.early && it.section === "tiered" && it.tierNum < MIN_TIER[it.slot]) continue;
+    if (it.slot !== "weapon" && !statPower(it)) continue;
+    out.push(it);
+  }
+  return out;
+}
+
+function analyse(items, cls, owned) {
+  let rows = items.map(it => ({
+    it, power: it.slot === "weapon" ? weaponDps(it, cls) : statPower(it),
+    diff: it.difficulty ?? 10,
+  }));
+  if (!prefs.early) {
+    // Hide untiered/set items weaker than the lowest tier shown (T11, or T5 for
+    // abilities/rings) of the same category.
+    const floor = {};
+    for (const r of rows) if (r.it.section === "tiered") {
+      const c = r.it.category, t = r.it.tierNum;
+      const f = floor[c];
+      if (!f || t < f.tier) floor[c] = { tier: t, power: r.power };
+      else if (t === f.tier) f.power = Math.max(f.power, r.power);
+    }
+    rows = rows.filter(r => r.it.section === "tiered" || !floor[r.it.category] || r.power >= floor[r.it.category].power);
+  }
+  // Flag weapons far above the best tiered one: usually spread/alternating patterns
+  // where not every shot hits a single target, so the DPS estimate is unreliable.
+  const tieredBest = Math.max(0, ...rows.filter(r => r.it.section === "tiered").map(r => r.power));
+  for (const r of rows) r.suspect = tieredBest > 0 && r.it.slot === "weapon" && r.power > tieredBest * 1.6;
+  const maxP = Math.max(1, ...rows.filter(r => !r.suspect).map(r => r.power));
+  // Score: strength 0-100, discounted for difficulty (up to 50% at difficulty 10 with the
+  // slider at "Easy to get"), so a marginal upgrade from a much harder dungeon scores lower.
+  for (const r of rows) {
+    r.norm = Math.min(1, r.power / maxP);
+    r.score = 100 * r.norm * (1 - prefs.w * 0.5 * r.diff / 10);
+  }
+  // Anything scoring below your best checked item is hidden from the main list.
+  const ownedRows = rows.filter(r => owned[r.it.slug] && !r.suspect);
+  const current = ownedRows.sort((a, b) => b.score - a.score)[0] || null;
+  const threshold = current ? current.score : -1;
+  // Next achievable items: easiest first, skipping any item that is both harder and
+  // lower-scoring than another candidate.
+  const cands = rows.filter(r => !owned[r.it.slug] && !r.suspect && r.score > threshold)
+    .sort((a, b) => a.diff - b.diff || b.score - a.score);
+  const ladder = []; let best = threshold;
+  for (const r of cands) if (r.score > best + 0.5) { ladder.push(r); best = r.score; }
+  rows.sort((a, b) => b.score - a.score);
+  return { rows, ladder, current, maxP };
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function itemRow(r, slot, owned, isNext) {
+  const it = r.it;
+  const unit = slot === "weapon" ? "DPS" : isDamageAbility(it) ? "dmg/cast" : "stat pts";
+  const src = it.diffBasis.startsWith("dungeon:") ? it.diffBasis.slice(8)
+            : it.diffBasis === "tier" ? "Tiered drop (common everywhere)" : it.diffBasis;
+  const bits = [];
+  if (slot === "weapon") {
+    const p = it.projectiles;
+    bits.push(p.map(x => `${x.shots}×${Math.round(x.avg)}${x.rof !== 1 ? ` @${Math.round(x.rof * 100)}%` : ""}`).join(" + "));
+    if (p.some(x => x.ap)) bits.push("armor piercing");
+    if (p.some(x => x.multi)) bits.push("multi-hit");
+    if (p[0]?.range) bits.push(`${p[0].range} tiles`);
+  }
+  const eq = Object.entries(it.onEquip).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`).join(", ");
+  if (eq) bits.push(eq);
+  const img = it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph'}))">` : `<span class="ph"></span>`;
+  return `<li class="it${owned[it.slug] ? " owned" : ""}${isNext ? " isnext" : ""}">
+    <input type="checkbox" data-slug="${esc(it.slug)}" ${owned[it.slug] ? "checked" : ""} aria-label="Obtained ${esc(it.name)}">
+    ${img}
+    <div><span class="name"><a href="https://www.realmeye.com/wiki/${esc(it.slug)}" target="_blank" rel="noopener">${esc(it.name)}</a></span><span class="tier">${esc(it.tier)}</span></div>
+    <div class="nums"><span class="pow"${r.suspect ? ' title="Complex firing pattern: not every shot will hit one target, so real DPS is likely much lower"' : ""}>${r.suspect ? "⚠ " : ""}${Math.round(r.power)} <small>${unit}</small></span>
+      <span class="score" title="Score (strength discounted by difficulty)">${Math.round(r.score)}</span>
+      <span class="diff" style="background:${diffColor(it.difficulty)}" title="Difficulty (0–10)">${it.difficulty ?? "–"}</span>
+      <div class="bar"><i style="width:${Math.round(r.norm * 100)}%"></i></div></div>
+    <div class="desc">${esc(src)}${bits.length ? " · " + esc(bits.join(" · ")) : ""}${it.event ? " · event" : ""}</div>
+  </li>`;
+}
+
+function renderSlot(cls, slot, cats) {
+  const owned = progress[cls.slug] || {};
+  const key = cls.slug + slot;
+  let active = cats;
+  let tabs = "";
+  if (cats.length > 1) {
+    const sel = prefs.tabs[key] || "all";
+    active = sel === "all" ? cats : [sel];
+    tabs = `<div class="tabs">` + ["all", ...cats].map(c =>
+      `<button data-tab="${key}" data-val="${c}" aria-pressed="${c === sel}">${c === "all" ? "All" : esc(D.categories[c].name)}</button>`).join("") + `</div>`;
+  }
+  const items = itemsFor(active);
+  const a = analyse(items, cls, owned);
+  const ownedCount = a.rows.filter(r => owned[r.it.slug]).length;
+  const limit = shown[key] || 5;
+  const visible = a.ladder.slice(0, limit);
+  const next = visible[0];
+  const cur = a.current ? `Current best: <b>${esc(a.current.it.name)}</b> (score ${Math.round(a.current.score)}). ` : "";
+  const nextHtml = next
+    ? `<div class="next">${cur}Next goal: <b>${esc(next.it.name)}</b> (score ${Math.round(next.score)}, difficulty ${next.it.difficulty ?? "–"})</div>`
+    : items.length ? `<div class="next done">${cur}Nothing scores higher than what you've already got.</div>` : "";
+  const more = a.ladder.length > limit
+    ? `<button class="btn more" data-more="${key}">Show ${Math.min(5, a.ladder.length - limit)} more</button>` : "";
+  return `<section class="slot">
+    <div class="slot-head"><h2>${SLOT_LABEL[slot]}</h2>
+      <span class="sub">${esc(active.map(c => D.categories[c].name).join(" + "))} · ${ownedCount}/${a.rows.length} obtained</span>${tabs}</div>
+    ${nextHtml}
+    ${visible.length ? `<ol class="path">${visible.map(r => itemRow(r, slot, owned, r === next)).join("")}</ol>${more}` : ""}
+    ${!items.length ? `<div class="empty">No items match the current filters.</div>` : ""}
+    <details class="all"><summary>All ${a.rows.length} items, by score</summary>
+      <div class="tbl"><ol class="path">${a.rows.map(r => itemRow(r, slot, owned, false)).join("")}</ol></div>
+    </details>
+  </section>`;
+}
+
+function render() {
+  const cls = D.classes.find(c => c.slug === prefs.cls) || D.classes[0];
+  prefs.cls = cls.slug;
+  $("#classes").innerHTML = D.classes.map(c => {
+    const n = Object.values(progress[c.slug] || {}).filter(Boolean).length;
+    return `<button data-cls="${c.slug}" aria-pressed="${c.slug === cls.slug}">${esc(c.name)}${n ? `<span class="cnt">${n}</span>` : ""}</button>`;
+  }).join("");
+  $("#att").placeholder = `ATT ${cls.caps.ATT}`;
+  $("#dex").placeholder = `DEX ${cls.caps.DEX}`;
+  $("#slots").innerHTML =
+    renderSlot(cls, "weapon", cls.slots.weapon) +
+    renderSlot(cls, "ability", [cls.slots.ability]) +
+    renderSlot(cls, "armor", [cls.slots.armor]) +
+    renderSlot(cls, "ring", ["rings"]);
+  save(PREF_KEY, prefs);
+}
+
+// ---- wiring
+$("#meta").innerHTML = `${Object.keys(D.items).length} items · scraped ${new Date(D.generated).toLocaleDateString()} from <a href="${D.source}" target="_blank" rel="noopener">RealmEye</a>`;
+$("#w").value = prefs.w; $("#def").value = prefs.def; $("#defv").textContent = prefs.def;
+$("#buff").checked = prefs.buff; $("#limited").checked = prefs.limited; $("#undrop").checked = prefs.undrop; $("#early").checked = prefs.early;
+
+$("#classes").addEventListener("click", e => { const b = e.target.closest("[data-cls]"); if (b) { prefs.cls = b.dataset.cls; render(); } });
+$("#w").addEventListener("input", e => { prefs.w = +e.target.value; render(); });
+$("#def").addEventListener("input", e => { prefs.def = +e.target.value; $("#defv").textContent = prefs.def; render(); });
+for (const id of ["buff", "limited", "undrop", "early"]) $("#" + id).addEventListener("change", e => { prefs[id] = e.target.checked; render(); });
+for (const id of ["att", "dex"]) $("#" + id).addEventListener("input", render);
+
+$("#slots").addEventListener("click", e => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { prefs.tabs[t.dataset.tab] = t.dataset.val; render(); }
+  const m = e.target.closest("[data-more]");
+  if (m) { shown[m.dataset.more] = (shown[m.dataset.more] || 5) + 5; render(); }
+});
+$("#slots").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-slug]");
+  if (!cb) return;
+  const p = progress[prefs.cls] ||= {};
+  if (cb.checked) p[cb.dataset.slug] = true; else delete p[cb.dataset.slug];
+  save(STORE_KEY, progress);
+  const openIdx = [...document.querySelectorAll("details.all")].map(d => d.open);
+  render();
+  document.querySelectorAll("details.all").forEach((d, i) => d.open = openIdx[i]);
+});
+
+$("#reset").addEventListener("click", () => {
+  const cls = D.classes.find(c => c.slug === prefs.cls);
+  if (confirm(`Clear all checked items for ${cls.name}?`)) { delete progress[prefs.cls]; save(STORE_KEY, progress); render(); }
+});
+$("#export").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(progress, null, 2)], { type: "application/json" });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "rotmg-progress.json" });
+  a.click(); URL.revokeObjectURL(a.href);
+});
+$("#import").addEventListener("click", () => {
+  const inp = Object.assign(document.createElement("input"), { type: "file", accept: ".json,application/json" });
+  inp.onchange = async () => {
+    try { progress = JSON.parse(await inp.files[0].text()); save(STORE_KEY, progress); render(); }
+    catch { alert("That file isn't a valid progress export."); }
+  };
+  inp.click();
+});
+
+render();
+</script>
+</body>
+</html>
