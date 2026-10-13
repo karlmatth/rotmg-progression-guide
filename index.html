@@ -263,7 +263,7 @@ function statScore(it) {
 // Ability categories where most items deal damage are ranked by damage per cast;
 // buff/utility abilities, armor and rings are ranked by their stat bonuses.
 const DAMAGE_CATS = new Set(Object.values(D.categories).filter(c => c.slot === "ability" &&
-  c.items.filter(s => D.items[s]?.projectiles.length).length >= 0.7 * c.items.length).map(c => c.slug));
+  c.items.filter(s => D.items[s]?.projectiles.some(p => !p.fromEffect)).length >= 0.7 * c.items.length).map(c => c.slug));
 function isDamageAbility(it) { return it.slot === "ability" && DAMAGE_CATS.has(it.category); }
 function statPower(it) {
   if (isDamageAbility(it)) return it.projectiles.reduce((s, p) => s + p.shots * p.avg, 0);
@@ -280,7 +280,6 @@ function itemsFor(cats) {
     if (!prefs.limited && (it.event || it.section === "limited")) continue;
     if (!prefs.undrop && it.difficulty == null) continue;
     if (!prefs.early && it.section === "tiered" && it.tierNum < MIN_TIER[it.slot]) continue;
-    if (it.slot !== "weapon" && !statPower(it)) continue;
     out.push(it);
   }
   return out;
@@ -301,7 +300,8 @@ function analyse(items, cls, owned) {
       if (!f || t < f.tier) floor[c] = { tier: t, power: r.power };
       else if (t === f.tier) f.power = Math.max(f.power, r.power);
     }
-    rows = rows.filter(r => r.it.section === "tiered" || !floor[r.it.category] || r.power >= floor[r.it.category].power);
+    // Unrated items (no stats or damage we can measure) are kept so nothing disappears silently.
+    rows = rows.filter(r => r.it.section === "tiered" || !r.power || !floor[r.it.category] || r.power >= floor[r.it.category].power);
   }
   // Flag weapons far above the best tiered one: usually spread/alternating patterns
   // where not every shot hits a single target, so the DPS estimate is unreliable.
@@ -332,7 +332,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
 
 function itemRow(r, slot, owned, isNext) {
   const it = r.it;
-  const unit = slot === "weapon" ? "DPS" : isDamageAbility(it) ? "dmg/cast" : "stat pts";
+  const unit = !r.power ? "unrated" : slot === "weapon" ? "DPS" : isDamageAbility(it) ? "dmg/cast" : "stat pts";
   const src = it.diffBasis.startsWith("dungeon:") ? it.diffBasis.slice(8)
             : it.diffBasis === "tier" ? "Tiered drop (common everywhere)" : it.diffBasis;
   const bits = [];
@@ -343,6 +343,7 @@ function itemRow(r, slot, owned, isNext) {
     if (p.some(x => x.multi)) bits.push("multi-hit");
     if (p[0]?.range) bits.push(`${p[0].range} tiles`);
   }
+  if (isDamageAbility(it) && it.projectiles[0]?.fromEffect) bits.push("damage estimated from effect text");
   const eq = Object.entries(it.onEquip).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`).join(", ");
   if (eq) bits.push(eq);
   const img = it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph'}))">` : `<span class="ph"></span>`;
@@ -350,7 +351,7 @@ function itemRow(r, slot, owned, isNext) {
     <input type="checkbox" data-slug="${esc(it.slug)}" ${owned[it.slug] ? "checked" : ""} aria-label="Obtained ${esc(it.name)}">
     ${img}
     <div><span class="name"><a href="https://www.realmeye.com/wiki/${esc(it.slug)}" target="_blank" rel="noopener">${esc(it.name)}</a></span><span class="tier">${esc(it.tier)}</span></div>
-    <div class="nums"><span class="pow"${r.suspect ? ' title="Complex firing pattern: not every shot will hit one target, so real DPS is likely much lower"' : ""}>${r.suspect ? "⚠ " : ""}${Math.round(r.power)} <small>${unit}</small></span>
+    <div class="nums"><span class="pow"${r.suspect ? ' title="Complex firing pattern: not every shot will hit one target, so real DPS is likely much lower"' : ""}>${r.suspect ? "⚠ " : ""}${r.power ? Math.round(r.power) : "–"} <small>${unit}</small></span>
       <span class="score" title="Score (strength discounted by difficulty)">${Math.round(r.score)}</span>
       <span class="diff" style="background:${diffColor(effDifficulty(it))}" title="${it.rarity ? `Difficulty ${it.difficulty} + rarity (×${rarityFactor(it)} rarer) = ${effDifficulty(it)}` : "Difficulty (0–10)"}">${effDifficulty(it) ?? "–"}</span>
       <div class="bar"><i style="width:${Math.round(r.norm * 100)}%"></i></div></div>

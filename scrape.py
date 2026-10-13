@@ -192,7 +192,7 @@ def scrape_category(slug):
 def scrape_category_links(w):
     """Fallback for pages laid out as grids (e.g. rings): harvest item links
     per section, reading the tier from 'Tier N' sub-headings."""
-    items, seen = [], set()
+    items, seen = [], {}
     section = tier = None
     for el in w.find_all(["h2", "h3", "h4", "table"]):
         if el.name != "table":
@@ -210,14 +210,19 @@ def scrape_category_links(w):
             s = slug_of(a["href"])
             img = a.find("img")
             label = (img.get("title") or img.get("alt")) if img else text(a)
-            if not s or s in seen or not label or "#" in a["href"]:
+            src = (BASE + img["src"]) if img and img.get("src", "").startswith("/") else None
+            if not s or not label or "#" in a["href"]:
                 continue
-            seen.add(s)
-            items.append({
-                "slug": s, "name": label, "tier": tier, "section": section,
-                "img": (BASE + img["src"]) if img and img.get("src", "").startswith("/") else None,
-            })
-    return items
+            if s in seen:
+                # Untiered rows link the name first and the picture second.
+                if src and not seen[s]["img"]:
+                    seen[s]["img"] = src
+                continue
+            seen[s] = {"slug": s, "name": label, "tier": tier, "section": section, "img": src}
+            items.append(seen[s])
+    # Items listed in the grid always have a picture; picture-less links are
+    # mentions in set-bonus notes (often other slots' items).
+    return [i for i in items if i["img"]]
 
 
 # ---------------------------------------------------------------- items
@@ -231,6 +236,35 @@ def parse_stats(s):
     for m in re.finditer(r"([+-]\d+)\s*(HP|MP|ATT|DEF|SPD|DEX|VIT|WIS)\b", s):
         out[m.group(2)] = out.get(m.group(2), 0) + int(m.group(1))
     return out
+
+
+EFFECT_DMG_RE = re.compile(
+    r"(?:damage:\s*(\d[\d,]*)(?:\s*-\s*(\d[\d,]*))?)|"
+    r"(?:(\d[\d,]*)(?:\s*-\s*(\d[\d,]*))?(?:\s*\([^)]*\))?\s*(?:area\s+)?damage\b)", re.I)
+
+
+def effect_damage(effects):
+    """Some abilities only describe their damage in the effect text, e.g.
+    'Damage: 800 (+9 per WIS over 42) damage ... explodes 4 times'. Returns an
+    estimated projectile (largest hit x repeat count) or None."""
+    best = None
+    for e in effects:
+        hits = []
+        for m in EFFECT_DMG_RE.finditer(e):
+            lo, hi = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+            lo = float(lo.replace(",", ""))
+            hi = float(hi.replace(",", "")) if hi else lo
+            hits.append((lo + hi) / 2)
+        if not hits:
+            continue
+        times = re.search(r"(\d+)\s*times", e)
+        est = max(hits) * (int(times.group(1)) if times else 1)
+        if best is None or est > best:
+            best = est
+    if not best:
+        return None
+    return {"shots": 1, "avg": best, "rof": 1.0, "range": None, "ap": False, "multi": False,
+            "fromEffect": True}
 
 
 def scrape_item(slug):
@@ -338,6 +372,10 @@ def scrape_item(slug):
     for p in projs:
         p.pop("detail", None)
     info["projectiles"] = projs
+    if not projs:
+        est = effect_damage(info["effects"])
+        if est:
+            info["projectiles"] = [est]
     return info
 
 
