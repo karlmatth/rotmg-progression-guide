@@ -5,7 +5,7 @@ window.SITE_CONFIG = {
   gaMeasurementId: "",
 
   // Google AdSense publisher ID, e.g. "ca-pub-1234567890123456"
-  adsenseClient: "",
+  adsenseClient: "ca-pub-8203656544444163",
 
   // AdSense display ad unit IDs (the data-ad-slot number of each unit you create).
   // "top" sits under the settings panel, "bottom" above the "How it works" notes.

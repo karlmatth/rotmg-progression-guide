@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RotMG Progression Guide</title>
 <meta name="description" content="Per-class gear progression guide for Realm of the Mad God: weapon DPS, dungeon difficulty and drop rarity, with a checklist for the items you've got.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8203656544444163"
+     crossorigin="anonymous"></script>
 <script src="site-config.js"></script>
 <script>
-// Analytics and ads load only when their IDs are set in site-config.js.
+// Analytics loads only when its ID is set in site-config.js. The AdSense tag above
+// is static (AdSense site verification needs it in the HTML); banners appear only
+// once ad unit IDs are set in site-config.js.
 (function () {
   var c = window.SITE_CONFIG || {};
   function load(src, attrs) {
@@ -22,10 +26,6 @@
     window.gtag = function () { dataLayer.push(arguments); };
     gtag("js", new Date());
     gtag("config", c.gaMeasurementId);
-  }
-  if (c.adsenseClient) {
-    load("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" +
-      encodeURIComponent(c.adsenseClient), { crossorigin: "anonymous" });
   }
 })();
 </script>
