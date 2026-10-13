@@ -10,8 +10,7 @@
 <script src="site-config.js"></script>
 <script>
 // Analytics loads only when its ID is set in site-config.js. The AdSense tag above
-// is static (AdSense site verification needs it in the HTML); banners appear only
-// once ad unit IDs are set in site-config.js.
+// runs Google's Auto ads; ad placement is managed in the AdSense dashboard.
 (function () {
   var c = window.SITE_CONFIG || {};
   function load(src, attrs) {
@@ -135,10 +134,6 @@ details.all { border-top: 1px solid var(--line); margin-top: auto; }
 details.all summary { padding: 10px 14px; cursor: pointer; color: var(--muted); font-size: 13px; }
 details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
 .empty { padding: 14px; color: var(--muted); }
-.ad { margin: 18px 0; min-height: 90px; text-align: center; }
-.ad[hidden] { display: none; }
-.ad .ad-label { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 4px; }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin: 18px 0 0; }
 .legend p { margin: 0; max-width: 820px; }
 @media (max-width: 560px) {
@@ -205,11 +200,7 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
     </div>
   </div>
 
-  <div class="ad" data-ad="top" hidden></div>
-
   <div class="slots" id="slots"></div>
-
-  <div class="ad" data-ad="bottom" hidden></div>
 
   <div class="legend">
     <p><b>How it works.</b> Weapons are ranked by single-target DPS:
@@ -229,22 +220,6 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
   </div>
 </div>
 
-<script>
-// Fill the banner placeholders with fixed AdSense display units (no pop-ups or overlays).
-(function () {
-  var c = window.SITE_CONFIG || {};
-  if (!c.adsenseClient) return;
-  document.querySelectorAll(".ad[data-ad]").forEach(function (box) {
-    var slot = (c.adSlots || {})[box.dataset.ad];
-    if (!slot) return;
-    box.innerHTML = '<span class="ad-label">Advertisement</span>' +
-      '<ins class="adsbygoogle" style="display:block" data-ad-client="' + c.adsenseClient +
-      '" data-ad-slot="' + slot + '" data-ad-format="horizontal" data-full-width-responsive="true"></ins>';
-    box.hidden = false;
-    (window.adsbygoogle = window.adsbygoogle || []).push({});
-  });
-})();
-</script>
 <script src="data.js"></script>
 <script>
 const D = window.ROTMG_DATA;
