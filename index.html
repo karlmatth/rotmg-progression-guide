@@ -36,16 +36,33 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
   padding: 6px 12px; border-radius: 999px; cursor: pointer; font: inherit; }
 .classes button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .classes button .cnt { font-size: 11px; opacity: .75; margin-left: 4px; }
-.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+.controls { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
   margin-bottom: 18px; box-shadow: var(--shadow); }
-.controls label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-.controls label.chk { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 13px; }
-.controls .row { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 13px; }
-.controls input[type=range] { flex: 1; accent-color: var(--accent); }
-.controls input[type=number] { width: 70px; padding: 4px 6px; border: 1px solid var(--line);
-  background: var(--panel-2); color: var(--text); border-radius: 6px; font: inherit; }
-.controls .btns { display: flex; gap: 6px; align-items: end; flex-wrap: wrap; }
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.group { border: 0; margin: 0; padding: 14px 16px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.group + .group { border-left: 1px solid var(--line); }
+.group legend { float: left; width: 100%; padding: 0; margin-bottom: 2px; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.field { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 10px; min-height: 30px; }
+.lbl { font-size: 13px; color: var(--muted); }
+.ctl { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: var(--muted); }
+.ctl .end { font-size: 12px; }
+.ctl .val { min-width: 26px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); font-size: 13px; }
+.ctl .hint, .check small { font-size: 12px; color: var(--muted); }
+.controls input[type=range] { flex: 1; min-width: 60px; accent-color: var(--accent); }
+.controls input[type=number] { width: 64px; height: 30px; padding: 0 8px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--text); border-radius: 6px; font: inherit; font-size: 13px; }
+#att, #dex { width: 78px !important; }
+.note { margin: -4px 0 0; font-size: 12px; color: var(--muted); }
+.check { display: grid; grid-template-columns: 18px 1fr; align-items: start; gap: 10px; font-size: 13px; cursor: pointer; }
+.check input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
+.check small { display: block; margin-top: 1px; line-height: 1.35; }
+.bar-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 16px;
+  border-top: 1px solid var(--line); }
+.btn.danger { color: var(--d4); }
+@media (max-width: 860px) {
+  .group + .group { border-left: 0; border-top: 1px solid var(--line); }
+}
 .btn { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 5px 10px;
   border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; }
 .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr)); gap: 16px; }
@@ -114,25 +131,48 @@ details.all .tbl { max-height: 420px; overflow: auto; padding: 0 8px 8px; }
   <div class="classes" id="classes" role="group" aria-label="Class"></div>
 
   <div class="controls">
-    <label>Prioritize
-      <span class="row">Power <input type="range" id="w" min="0" max="1" step="0.05" value="0.45"> Easy to get</span>
-    </label>
-    <label>Target DEF <span class="row"><input type="range" id="def" min="0" max="100" step="1" value="20"><output id="defv">20</output></span></label>
-    <label>Your ATT / DEX (blank = class max)
-      <span class="row"><input type="number" id="att" placeholder="ATT"> <input type="number" id="dex" placeholder="DEX"></span>
-    </label>
-    <div>
-      <label class="chk"><input type="checkbox" id="buff"> Damaging + Berserk</label>
-      <label class="chk"><input type="checkbox" id="limited"> Include limited / event items</label>
-      <label class="chk"><input type="checkbox" id="undrop"> Include non-drop items (shop, forge-only)</label>
-      <label class="chk">Biome whites are <input type="number" id="biome" min="1" max="50" step="1" style="width:56px"> × rarer</label>
-      <label class="chk">Event whites are <input type="number" id="event" min="1" max="50" step="1" style="width:56px"> × rarer</label>
-      <label class="chk"><input type="checkbox" id="early"> Show early items (below T11 / T5 for abilities &amp; rings, and untiered items weaker than that)</label>
+    <div class="groups">
+      <fieldset class="group">
+        <legend>Scoring</legend>
+        <div class="field">
+          <span class="lbl">Prioritize</span>
+          <div class="ctl"><span class="end">Power</span><input type="range" id="w" min="0" max="1" step="0.05" value="0.45" aria-label="Prioritize power or ease of getting"><span class="end">Easy</span></div>
+        </div>
+        <div class="field">
+          <span class="lbl">Target DEF</span>
+          <div class="ctl"><input type="range" id="def" min="0" max="100" step="1" value="20" aria-label="Target DEF"><output id="defv" class="val">20</output></div>
+        </div>
+        <div class="field">
+          <span class="lbl">ATT / DEX</span>
+          <div class="ctl"><input type="number" id="att" placeholder="ATT" aria-label="Your ATT (blank uses class max)" title="Leave blank to use the class max"><input type="number" id="dex" placeholder="DEX" aria-label="Your DEX (blank uses class max)" title="Leave blank to use the class max"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="buff"><span>Damaging + Berserk</span></label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Rarity</legend>
+        <p class="note">How much rarer than a normal drop. Raises difficulty.</p>
+        <label class="field">
+          <span class="lbl">Biome whites</span>
+          <span class="ctl"><input type="number" id="biome" min="1" max="50" step="1"><span class="hint">× rarer</span></span>
+        </label>
+        <label class="field">
+          <span class="lbl">Event whites</span>
+          <span class="ctl"><input type="number" id="event" min="1" max="50" step="1"><span class="hint">× rarer</span></span>
+        </label>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Show</legend>
+        <label class="check"><input type="checkbox" id="limited"><span>Limited &amp; event items</span></label>
+        <label class="check"><input type="checkbox" id="undrop"><span>Non-drop items<small>Shop and forge-only</small></span></label>
+        <label class="check"><input type="checkbox" id="early"><span>Early items<small>Below T11 (T5 for abilities &amp; rings) and weaker untiered items</small></span></label>
+      </fieldset>
     </div>
-    <div class="btns">
+    <div class="bar-actions">
       <button class="btn" id="export">Export progress</button>
       <button class="btn" id="import">Import</button>
-      <button class="btn" id="reset">Clear this class</button>
+      <button class="btn danger" id="reset">Clear this class</button>
     </div>
   </div>
 
